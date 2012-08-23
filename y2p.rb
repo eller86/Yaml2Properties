@@ -9,30 +9,40 @@ require 'yaml'
 
 inFile = ARGV[0] || "Messages.yml"
 
-messageFileMap =
-  {"en" => File.open("Messages.properties", mode="w"),
-  "zh" => File.open("Messages_zh.properties", mode="w"),
-  "ja" => File.open("Messages_ja.properties", mode="w")};
-
-messageObj = YAML::load(File.open(inFile));
-
-messageObj.each_pair do |key, messageMap|
-  messageMap.each_pair do |lang, message|
-    s = ""
-    message = message || ""
-
-    messageFileMap[lang].write(key + "=")
-
-    if lang == "en"
-      s = message
-    else
-      message.codepoints {|c| s += "\\u" + ("%04x" % c)}
-    end
-
-    messageFileMap[lang].write(s + "\n")
-  end
+# see http://stackoverflow.com/questions/582686/should-i-define-a-main-method-in-my-ruby-scripts
+if __FILE__ == $0
+  y2p = Yaml2Properties.new()
+  y2p.run(inFile)
 end
 
-messageFileMap.each_value do |f|
-  f.close
+class Yaml2Properties
+  def run(inFile)
+    messageFileMap =
+      {"en" => File.open("Messages.properties", mode="w"),
+      "zh" => File.open("Messages_zh.properties", mode="w"),
+      "ja" => File.open("Messages_ja.properties", mode="w")};
+
+    messageObj = YAML::load(File.open(inFile));
+
+    messageObj.each_pair do |key, messageMap|
+      messageMap.each_pair do |lang, message|
+        s = ""
+        message = message || ""
+
+        messageFileMap[lang].write(key + "=")
+
+        if lang == "en"
+          s = message
+        else
+          message.codepoints {|c| s += "\\u" + ("%04x" % c)}
+        end
+
+        messageFileMap[lang].write(s + "\n")
+      end
+    end
+
+    messageFileMap.each_value do |f|
+      f.close
+    end
+  end
 end
